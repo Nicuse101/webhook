@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhook</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgb(29, 29, 29);
+            font-family: 'Roboto', sans-serif;
+            color: white;
+        }
+
+        .container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .rounded-textbox {
+            width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #ccc;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+            background-color: rgb(50, 50, 50);
+            color: rgb(200, 200, 200);
+            text-align: center;
+        }
+
+        .rounded-textbox:focus {
+            border-color: #007BFF;
+        }
+
+        .rounded-button {
+            width: 320px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            background-color: rgb(0, 123, 255);
+            color: rgb(255, 255, 255);
+            font-family: 'Roboto', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .rounded-button:hover {
+            background-color: rgb(0, 103, 215);
+            transform: scale(1.05);
+        }
+
+        #status-text, #webhook-status {
+            margin-top: 10px;
+            font-size: 16px;
+            color: white;
+        }
+
+        #webhook-url {
+            display: block;
+            margin: 0 auto;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="url" id="webhook-url" class="rounded-textbox" placeholder="Enter webhook URL">
+        <h1>Webhook Spammer</h1>
+        <input type="text" id="text-input" class="rounded-textbox" placeholder="Enter text here">
+        <input type="text" id="username-input" class="rounded-textbox" placeholder="Username">
+        <input type="url" id="avatar-input" class="rounded-textbox" placeholder="Avatar picture">
+        <input type="number" id="number-input" class="rounded-textbox" placeholder="Enter a number">
+        <button id="submit-button" class="rounded-button">Submit</button>
+        <p id="status-text">Requests sent: 0</p>
+
+        <h1>Webhook Manager</h1>
+        <button id="test-webhook" class="rounded-button">Test Webhook</button>
+        <button id="destroy-webhook" class="rounded-button">Destroy Webhook</button>
+        <p id="webhook-status">Webhook status: N/A</p>
+    </div>
+
+    <script>
+        // Submit Button Functionality
+        document.getElementById('submit-button').addEventListener('click', async () => {
+            const content = document.getElementById('text-input').value;
+            const avatar_url = document.getElementById('avatar-input').value;
+            const username = document.getElementById('username-input').value || null;
+            const url = document.getElementById('webhook-url').value;
+            const number = parseInt(document.getElementById('number-input').value);
+            const statusText = document.getElementById('status-text');
+
+            if (!content || !url || isNaN(number) || number <= 0) {
+                alert('Please fill in all fields correctly.');
+                return;
+            }
+
+            let requestsSent = 0;
+            statusText.textContent = `Requests sent: ${requestsSent}`;
+
+            for (let i = 0; i < number; i++) {
+                try {
+                    await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content, avatar_url: avatar_url, username: username})
+                    });
+                    requestsSent++;
+                    statusText.textContent = `Requests sent: ${requestsSent}`;
+                } catch (error) {
+                    console.error('Request failed:', error);
+                    break;
+                }
+            }
+        });
+
+        document.getElementById('test-webhook').addEventListener('click', async () => {
+            const url = document.getElementById('webhook-url').value;
+            const statusText = document.getElementById('webhook-status');
+
+            if (!url) {
+                alert('Please provide a webhook URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, { method: 'GET' });
+                if (response.status === 200) {
+                    statusText.textContent = 'Webhook status: Your webhook is working.';
+                } else {
+                    statusText.textContent = 'Webhook status: Your webhook is invalid.';
+                }
+            } catch (error) {
+                console.error('Error testing webhook:', error);
+                statusText.textContent = 'Webhook status: Your webhook is invalid.';
+            }
+        });
+
+        document.getElementById('destroy-webhook').addEventListener('click', async () => {
+            const url = document.getElementById('webhook-url').value;
+            const statusText = document.getElementById('webhook-status');
+
+            if (!url) {
+                alert('Please provide a webhook URL.');
+                return;
+            }
+
+            try {
+                const response = await fetch(url, { method: 'DELETE' });
+                if (response.status === 204 || response.status === 200) {
+                    statusText.textContent = 'Webhook status: Webhook destroyed successfully.';
+                } else {
+                    statusText.textContent = 'Webhook status: Failed to destroy webhook.';
+                }
+            } catch (error) {
+                console.error('Error destroying webhook:', error);
+                statusText.textContent = 'Webhook status: Failed to destroy webhook.';
+            }
+        });
+    </script>
+</body>
+</html>
